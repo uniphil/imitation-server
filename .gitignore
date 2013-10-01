@@ -1,3 +1,4 @@
 video/
 frames/
 *.py[co]
+state.pickle

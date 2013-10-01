@@ -40,3 +40,9 @@ input {
     padding: 0.333em 0.2em;
     box-sizing: border-box;
 }
+
+#streamer {
+    width: 480px;
+    height: 300px;
+    background: #000;
+}

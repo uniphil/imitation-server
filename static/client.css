@@ -1,0 +1,15 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: #aaa;
+    font-family: sans-serif;
+}
+
+#streamer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}

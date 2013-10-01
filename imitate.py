@@ -14,13 +14,20 @@
 
 import os
 import pickle
+from datetime import datetime
 from flask import (Flask, request, render_template, stream_with_context,
-                   Response, url_for, send_file, redirect)
+                   Response, url_for, send_file, redirect, jsonify)
 app = Flask(__name__)
 
 
 js_redirect = lambda endpoint: '<script>window.location="{}"</script>'\
                                 .format(url_for(endpoint))
+
+
+if 'video' not in os.listdir('.'):
+    os.makedirs('video')
+if 'frames' not in os.listdir('.'):
+    os.makedirs('frames')
 
 
 @app.route('/controller')
@@ -31,6 +38,8 @@ def controller():
             state = pickle.load(p)
     except IOError:
         state = {'stream': None, 'start': None, 'interval': None}
+        with open('state.pickle', 'wb') as p:
+            pickle.dump(state, p)
     # 1. get available video files
     videos = os.listdir('video')
     try:
@@ -117,11 +126,8 @@ def clean():
     return js_redirect('controller')
 
 
-@app.route('/stream')
-def stream():
-    frames = request.args.get('frames')
-    if frames is None:
-        return 'missing frames arg', 400
+@app.route('/stream/<frames>')
+def stream(frames):
     stream_dir = 'frames/{}'.format(frames)
     try:
         assert frames in os.listdir('frames')
@@ -131,7 +137,7 @@ def stream():
     if period is None:
         with open('state.pickle', 'rb') as p:
             s = pickle.load(p)
-            pperiod=s.get('interval', 3)
+            pperiod=s.get('interval') or 3
         return render_template('stream-setup.html', stream=frames, pp=pperiod)
     try:
         period = int(period)
@@ -139,9 +145,17 @@ def stream():
         return 'invalid period {}'.format(period)
 
     with open('state.pickle', 'wb') as p:
-        pickle.dump({'stream': frames, 'start': 0, 'interval': period}, p)
+        stamp = datetime.now().timestamp()
+        pickle.dump({'stream': frames, 'start': stamp, 'interval': period}, p)
 
     return redirect(url_for('controller'))
+
+
+@app.route('/stream')
+def client_stream():
+    with open('state.pickle', 'rb') as p:
+        state = pickle.load(p)
+    return jsonify(state)
 
 
 @app.route('/frame/<stream>/<int:n>')
@@ -156,9 +170,7 @@ def frame(stream, n):
 
 @app.route('/')
 def client():
-    """
-    """
-    return 'hello'
+    return render_template('client.html')
 
 
 if __name__ == '__main__':
