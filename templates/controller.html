@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='controller.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+  <div class="stuff-block">
+    <h2>frame streams</h2>
+    <ul>
+      {% for stream in frames  %}
+        <li>{{ stream }} <a href="{{ url_for('stream', frames=stream) }}">stream</a> / <a href="{{ url_for('clean', video=stream) }}">clean</a></li>
+      {% else %}
+        <li><i>none</i></li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="stuff-block">
+    <h2>unchopped videos</h2>
+    <ul>
+      {% for video in unchopped %}
+        <li>{{ video }} <a href="{{ url_for('chop', video=video) }}">chop</a></li>
+      {% else %}
+        <li><i>none</i></li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="control-block">
+    <h2>streaming</h2>
+    {{ state }}
+  </div>
+
+{% endblock %}

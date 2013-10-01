@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='controller.css') }}" />
+{% endblock %}
+
+{% block content %}
+  
+  <h2>Stream "{{ stream }}"</h2>
+  <img width="240" src="{{ url_for('frame', stream=stream, n=0) }}" />
+  <img width="240" src="{{ url_for('frame', stream=stream, n=4) }}" />
+  <img width="240" src="{{ url_for('frame', stream=stream, n=24) }}" />
+
+  <form>
+    <input type="hidden" name="frames" value="{{ stream }}" />
+    <div>
+      <input name="period" id="period" type="number" value="{{ pp }}" min="1" max="30" />
+      <label for="period">shutter interval</label>
+    </div>
+    <div>
+      <button type="submit">stream</button>
+    </div>
+  </form>
+
+{% endblock %}
