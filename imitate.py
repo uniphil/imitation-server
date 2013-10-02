@@ -37,7 +37,7 @@ def controller():
         with open('state.pickle', 'rb') as p:
             state = pickle.load(p)
     except IOError:
-        state = {'stream': None, 'start': None, 'interval': None}
+        state = {'stream': None, 'start': None, 'interval': None, 'frames': 0}
         with open('state.pickle', 'wb') as p:
             pickle.dump(state, p)
     # 1. get available video files
@@ -81,7 +81,7 @@ def chop():
     vid_dir = 'video/{}'.format(vid)
     frame_path = '{}/frame%04d.jpg'.format(stream_dir)
 
-    splitter_cmd = ['avconv', '-i', vid_dir, frame_path]
+    splitter_cmd = ['avconv', '-i', vid_dir, '-s', '1280x720', frame_path]
     splitter = subprocess.Popen(splitter_cmd)
 
     def split():
@@ -146,7 +146,10 @@ def stream(frames):
 
     with open('state.pickle', 'wb') as p:
         stamp = datetime.now().timestamp()
-        pickle.dump({'stream': frames, 'start': stamp, 'interval': period}, p)
+        num_frames = len(os.listdir(stream_dir))
+        state = {'stream': frames, 'start': stamp, 'interval': period,
+                 'frames': num_frames}
+        pickle.dump(state, p)
 
     return redirect(url_for('controller'))
 
