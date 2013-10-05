@@ -145,13 +145,40 @@ def stream(frames):
         return 'invalid period {}'.format(period)
 
     with open('state.pickle', 'wb') as p:
-        stamp = datetime.now().timestamp()
+        # stamp = datetime.now().timestamp()
         num_frames = len(os.listdir(stream_dir))
-        state = {'stream': frames, 'start': stamp, 'interval': period,
+        state = {'stream': frames, 'start': None, 'interval': period,
                  'frames': num_frames}
         pickle.dump(state, p)
 
     return redirect(url_for('controller'))
+
+
+@app.route('/stream/stop')
+def stop():
+    with open('state.pickle', 'rb') as p:
+        state = pickle.load(p)
+    state['start'] = None
+    with open('state.pickle', 'wb') as p:
+        pickle.dump(state, p)
+    return jsonify(state)
+
+
+@app.route('/stream/start')
+def start():
+    try:
+        assert 'timestamp' in request.args
+    except AssertionError:
+        return 'missing timestamp to start', 400
+    with open('state.pickle', 'rb') as p:
+        state = pickle.load(p)
+    try:
+        state['start'] = int(request.args['timestamp'])
+    except ValueError:
+        return 'timestamp must be an int', 400
+    with open('state.pickle', 'wb') as p:
+        pickle.dump(state, p)
+    return jsonify(state)
 
 
 @app.route('/stream')

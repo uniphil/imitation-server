@@ -4,7 +4,8 @@ var StreamPlay = function(view_el) {
   this.endpoint = '/stream';
   this.state = {};
   this.mode = 'idle';
-  this.endpoint_check_freq = 2000;
+  this.endpoint_check_freq = 2000;  // ms
+  this.bump = 200;  // ms
   // this.preload = 3;
   this.message_el = $('<span></span>');
   this.preload_el = $('<img class="preloader" src="" />');
@@ -43,14 +44,16 @@ var StreamPlay = function(view_el) {
 
   this.update_state = function(server_state) {
     this.state = server_state;
+
     if (this.state.start === null) {
-      console.log('endpoint start is null');
-      this.stop_stream();
+      if (this.state.stream !== null && this.mode !== 'paused') {
+        this.pause_stream();
+      }
       return;
     }
 
     // where are we in the current stream?
-    var stream_start = new Date(this.state.start * 1000),  // python -> js
+    var stream_start = new Date(this.state.start),
         now = new Date();
     var current_frame = (now - stream_start) / (this.state.interval * 1000);
 
@@ -94,9 +97,22 @@ var StreamPlay = function(view_el) {
   };
 
 
+  this.pause_stream = function() {
+    console.log('pause_stream: pausing');
+    this.message_el.text('paused');
+    this.mode = 'paused';
+    var bg_path = '/frame/' + this.state.stream + '/0';
+    view_el.css({'background': "url('" + bg_path + "') 50% no-repeat",
+                 'background-size': 'contain'});
+  }
+
+
   this.show_frame = function() {
+    if (this.state.start === null) {
+      return;
+    }
     // where are we in the current stream?
-    var stream_start = new Date(this.state.start * 1000),  // python -> js
+    var stream_start = new Date(this.state.start),
         now = new Date();
     var frame_time = (now - stream_start) / (this.state.interval * 1000);
     var this_frame = Math.round(frame_time);
@@ -106,7 +122,7 @@ var StreamPlay = function(view_el) {
     console.log('showing frame ' + this_frame);
     var bg_path = '/frame/' + this.state.stream + '/' + this_frame;
     view_el.css({'background': "url('" + bg_path + "') 50% no-repeat",
-                  'background-size': 'contain'})
+                 'background-size': 'contain'});
 
     if (this.mode === 'streaming') {
       var time_to_next = (next_time - new Date());
@@ -122,13 +138,67 @@ var StreamPlay = function(view_el) {
   };
 
 
-  // is there at least one view_el element on the page?
-  if (view_el.length > 0) {
-    console.log('initializing streamer...');
-    var timer = this.setInterval(this.check_state, this.endpoint_check_freq);
-  }
+  this.startstop = function() {
+    console.log('startstop');
+    if (this.state.start === null) {
+      $.ajax({
+        type: 'GET',
+        url: this.endpoint + '/start?timestamp=' + +new Date(),
+        // args: {timestamp: +(new Date())},
+      });
+      return 'started';
+    } else {
+      $.ajax({
+        type: 'GET',
+        url: this.endpoint + '/stop',
+      });
+      return 'stopped';
+    }
+  };
 
+
+  this.bump_back = function() {
+    console.log('bumping back');
+    $.ajax({
+      type: 'GET',
+      url: this.endpoint + '/start?timestamp=' + (this.state.start + this.bump)
+    });
+  };
+
+
+  this.bump_forward = function() {
+    console.log('bump forward');
+    $.ajax({
+      type: 'GET',
+      url: this.endpoint + '/start?timestamp=' + (this.state.start - this.bump)
+    });
+  };
+ 
+
+  this.set_controls = function(ctl) {
+    $this = this;
+    $('.startstop', ctl).click(function() {
+      $(this).text($this.startstop() === 'started' ? 'stop' : 'start');
+    });
+    $('.bump.back', ctl).click(function() { $this.bump_back(); });
+    $('.bump.forward', ctl).click(function() { $this.bump_forward(); });
+  };
+
+
+  this.init = function() {
+    this.setInterval(this.check_state, this.endpoint_check_freq);
+  };
 };
 
 
-new StreamPlay($("#streamer"));
+var streamer_el = $("#streamer");
+var controls = $(".control-block");
+var streamer = null;
+
+if (streamer_el.length > 0) {
+  streamer = new StreamPlay(streamer_el);
+  streamer.init();
+}
+if (streamer && controls.length > 0) {
+  streamer.set_controls(controls);
+}
