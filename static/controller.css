@@ -51,5 +51,14 @@ input {
     height: 10px;
     width: 10px;
     position: absolute;
-    left: -9999em;
+    top: -9999em;
+}
+
+.mirror {
+    -moz-transform: scaleX(-1);
+    -o-transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+    filter: FlipH;
+    -ms-filter: "FlipH";
 }

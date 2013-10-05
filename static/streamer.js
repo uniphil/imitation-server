@@ -173,6 +173,12 @@ var StreamPlay = function(view_el) {
       url: this.endpoint + '/start?timestamp=' + (this.state.start - this.bump)
     });
   };
+
+
+  this.toggle_mirror = function() {
+    console.log('toggling mirror');
+    view_el.toggleClass('mirror');
+  };
  
 
   this.set_controls = function(ctl) {
@@ -182,6 +188,7 @@ var StreamPlay = function(view_el) {
     });
     $('.bump.back', ctl).click(function() { $this.bump_back(); });
     $('.bump.forward', ctl).click(function() { $this.bump_forward(); });
+    $('.mirror', ctl).click(function() { $this.toggle_mirror(); });
   };
 
 
