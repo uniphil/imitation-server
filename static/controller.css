@@ -47,6 +47,18 @@ input {
     background: #000;
 }
 
+.progress {
+    width: 480px;
+    height: 8px;
+    background: #222;
+    position: relative;
+}
+.progress .bar {
+    height: 8px;
+    background: #464;
+    transition: width: 0.5s linear;
+}
+
 #streamer .preloader {
     height: 10px;
     width: 10px;

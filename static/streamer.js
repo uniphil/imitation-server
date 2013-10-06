@@ -7,6 +7,7 @@ var StreamPlay = function(view_el) {
   this.endpoint_check_freq = 2000;  // ms
   this.bump = 200;  // ms
   // this.preload = 3;
+  this.progress_el = null;
   this.message_el = $('<span></span>');
   this.preload_el = $('<img class="preloader" src="" />');
   view_el.append(this.message_el);
@@ -121,13 +122,16 @@ var StreamPlay = function(view_el) {
 
     console.log('showing frame ' + this_frame);
     var bg_path = '/frame/' + this.state.stream + '/' + this_frame;
-    view_el.css({'background': "url('" + bg_path + "') 50% no-repeat",
+    view_el.css({'background': "#111 url('" + bg_path + "') 50% no-repeat",
                  'background-size': 'contain'});
 
     if (this.mode === 'streaming') {
       var time_to_next = (next_time - new Date());
       this.setTimeout(this.show_frame, time_to_next);
       this.preload_frame(next_frame);
+    }
+    if (this.progress_el) {
+      this.update_progress(next_frame);
     }
   };
 
@@ -192,6 +196,18 @@ var StreamPlay = function(view_el) {
   };
 
 
+  this.update_progress = function(frame) {
+    var percent = frame / this.state.frames * 100;
+    this.progress_el.css({width: percent + '%'});
+  };
+
+
+  this.set_progress = function(prog) {
+    var bar = $('.bar', prog.append('<div class="bar"></bar>'));
+    this.progress_el = bar;
+  };
+
+
   this.init = function() {
     this.setInterval(this.check_state, this.endpoint_check_freq);
   };
@@ -200,6 +216,7 @@ var StreamPlay = function(view_el) {
 
 var streamer_el = $("#streamer");
 var controls = $(".control-block");
+var progress = $(".progress");
 var streamer = null;
 
 if (streamer_el.length > 0) {
@@ -208,4 +225,7 @@ if (streamer_el.length > 0) {
 }
 if (streamer && controls.length > 0) {
   streamer.set_controls(controls);
+}
+if (streamer && progress.length > 0) {
+  streamer.set_progress(progress);
 }
